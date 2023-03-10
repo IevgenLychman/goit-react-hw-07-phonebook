@@ -1,23 +1,69 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Layout } from './Layout/Layout';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, lazy } from 'react';
+import { refreshUser } from 'redux/auth/actions';
+import { PublicRoute } from './PublicRoute';
+import { PrivatRoute } from './PrivateRoute';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { getIsRefreshing } from 'redux/auth/selectors';
 import { Container } from './App.styled';
-import { getError, getIsLoading } from 'redux/selectors';
-import { useSelector } from 'react-redux';
 
-import { InputForm } from './inputForm/InputForm';
-import { ContactList } from './ContactList/ContactList';
-import { Filter } from './Filter/Filter';
+const HomePage = lazy(() => import('Pages/HomePage/HomePage'));
+// const ContactDetails = lazy(() =>
+//   import('Pages/ContactDetails/ContactDetails')
+// );
+const ContactsPage = lazy(() => import('Pages/ContactsPage/ContactsPage'));
+const SingUpPage = lazy(() => import('Pages/SingUpPage/SingUpPage'));
+const SingInPage = lazy(() => import('Pages/SingInPage/SingInPage'));
 
-export function App() {
-  const isLoading = useSelector(getIsLoading);
-  const error = useSelector(getError);
+export const App = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(refreshUser());
+  }, [dispatch]);
+
+  const isRefreshing = useSelector(getIsRefreshing);
 
   return (
     <Container>
-      <h1>Phonebook</h1>
-      <InputForm />
-      <h2>Contacts</h2>
-      <Filter />
-      {isLoading && !error && <p>Is loading</p>}
-      <ContactList />
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<HomePage />} />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute redirectTo="/contacts" component={<SingInPage />} />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute redirectTo="/contacts" component={<SingUpPage />} />
+            }
+          />
+          {/* <Route
+            path="/contacts"
+            element={
+              <PrivatRoute redirectTo="/login" component={<ContactsPage />} />
+            }
+          >
+            <Route
+              path=":id"
+              element={
+                <PrivatRoute
+                  redirectTo="/login"
+                  component={<ContactDetails />}
+                />
+              }
+            />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace={true} />} /> */}
+        </Route>
+      </Routes>
+      <ToastContainer />
     </Container>
   );
-}
+};
